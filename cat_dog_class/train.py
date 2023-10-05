@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import torchvision
 from IPython.display import clear_output
 from matplotlib import pyplot as plt
+from model_real import Simple_Stupid_model
 from sklearn.metrics import accuracy_score, f1_score
 from torchvision import transforms
 from tqdm.auto import tqdm
@@ -256,23 +257,18 @@ class Runner:
         return self.metrics
 
 
-# a special module that converts [batch, channel, w, h] to [batch, units]: tf/keras style
-class Flatten(nn.Module):
-    def forward(self, x):
-        # finally we have it in pytorch
-        return torch.flatten(x, start_dim=1)
+# model = nn.Sequential()
 
+# # reshape from "images" to flat vectors
+# model.add_module("flatten", Flatten())
 
-model = nn.Sequential()
+# # dense "head"
+# model.add_module("dense1", nn.Linear(3 * SIZE_H * SIZE_W, 256))
+# model.add_module("dense3", nn.Linear(256, EMBEDDING_SIZE))
+# # logits for NUM_CLASSES=2: cats and dogs
+# model.add_module("dense4_logits", nn.Linear(EMBEDDING_SIZE, NUM_CLASSES))
 
-# reshape from "images" to flat vectors
-model.add_module("flatten", Flatten())
-
-# dense "head"
-model.add_module("dense1", nn.Linear(3 * SIZE_H * SIZE_W, 256))
-model.add_module("dense3", nn.Linear(256, EMBEDDING_SIZE))
-# logits for NUM_CLASSES=2: cats and dogs
-model.add_module("dense4_logits", nn.Linear(EMBEDDING_SIZE, NUM_CLASSES))
+simp_model = Simple_Stupid_model()
 
 
 class CNNRunner(Runner):
@@ -306,7 +302,7 @@ class CNNRunner(Runner):
         # save checkpoint of the best model to disk
         if val_accuracy > self._top_val_accuracy and self.checkpoint_name is not None:
             self._top_val_accuracy = val_accuracy
-            torch.save(model, open(self.checkpoint_name, "wb"))
+            torch.save(self.model.state_dict(), self.checkpoint_name)
 
     def output_log(self, **kwargs):
         """
@@ -372,11 +368,11 @@ class CNNRunner(Runner):
 
 
 if __name__ == "__main__":
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    opt = torch.optim.Adam(simp_model.parameters(), lr=1e-3)
     opt.zero_grad()
-    ckpt_name = "model_base.ckpt"
-    model = model.to(device)
+    ckpt_name = "model_base.pt"
+    simp_model = simp_model.to(device)
 
-    runner = CNNRunner(model, opt, device, ckpt_name)
+    runner = CNNRunner(simp_model, opt, device, ckpt_name)
 
     runner.train(train_batch_gen, val_batch_gen, n_epochs=2, visualize=False)
