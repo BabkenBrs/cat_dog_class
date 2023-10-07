@@ -9,16 +9,17 @@ import torch.nn.functional as F
 import torchvision
 from IPython.display import clear_output
 from matplotlib import pyplot as plt
-from model_real import Simple_Stupid_model
 from sklearn.metrics import accuracy_score, f1_score
 from torchvision import transforms
 from tqdm.auto import tqdm
 
+from cat_dog_class.model_real import Simple_Stupid_model
+
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-
-# ! wget https://www.dropbox.com/s/gqdo90vhli893e0/data.zip
-# ! unzip -qq data.zip -d data
+if "data" not in os.listdir():
+    os.system("wget https://www.dropbox.com/s/gqdo90vhli893e0/data.zip")
+    os.system("unzip -qq data.zip -d data")
 
 # Let's have a cell with global hyperparameters for the CNNs in this notebook
 
@@ -256,17 +257,6 @@ class Runner:
         self._run_epoch(loader, train_phase=False, output_log=True, **kwargs)
         return self.metrics
 
-
-# model = nn.Sequential()
-
-# # reshape from "images" to flat vectors
-# model.add_module("flatten", Flatten())
-
-# # dense "head"
-# model.add_module("dense1", nn.Linear(3 * SIZE_H * SIZE_W, 256))
-# model.add_module("dense3", nn.Linear(256, EMBEDDING_SIZE))
-# # logits for NUM_CLASSES=2: cats and dogs
-# model.add_module("dense4_logits", nn.Linear(EMBEDDING_SIZE, NUM_CLASSES))
 
 simp_model = Simple_Stupid_model()
 
